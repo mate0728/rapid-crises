@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Command Center | CrisisNexus</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="main-content">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-border-all" style="color:var(--accent-cyan);font-size:1.6rem;margin-right:10px"></i>Command Center</h1>
+      <p class="subtitle">Real-time situational awareness across all zones</p>
+    </div>
+    <div class="header-actions">
+      <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+      <button class="btn btn-danger" onclick="document.getElementById('sosModal').classList.add('active')">
+        <i class="fa-solid fa-tower-broadcast"></i> SOS ALERT
+      </button>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="grid-4" id="statsGrid">
+    <div class="stat-card red">
+      <div class="stat-label">Active Emergencies</div>
+      <div class="stat-value" id="stat-active">—</div>
+      <div class="stat-sub"><i class="fa-solid fa-circle-dot" style="color:var(--accent-red)"></i> Requires immediate action</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-label">Responding Units</div>
+      <div class="stat-value" id="stat-responding">—</div>
+      <div class="stat-sub"><i class="fa-solid fa-truck-fast"></i> En route / on scene</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Resolved Today</div>
+      <div class="stat-value" id="stat-resolved">—</div>
+      <div class="stat-sub"><i class="fa-solid fa-check-circle"></i> Incidents closed</div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-label">Avg Response Time</div>
+      <div class="stat-value" id="stat-response-time">—</div>
+      <div class="stat-sub"><i class="fa-solid fa-stopwatch"></i> seconds</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start">
+
+    <!-- Recent Alerts Feed -->
+    <div class="card">
+      <div class="flex-between mb-4">
+        <div class="card-title"><i class="fa-solid fa-rss"></i> Live Alert Feed</div>
+        <a href="alerts.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div id="alert-feed" class="alert-feed">
+        <div class="empty-state"><i class="fa-solid fa-radar"></i><p>Scanning for incidents...</p></div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Type Breakdown -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Incident Breakdown</div>
+        <div id="type-breakdown" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div class="skeleton" style="height:32px"></div>
+          <div class="skeleton" style="height:32px"></div>
+          <div class="skeleton" style="height:32px"></div>
+        </div>
+      </div>
+
+      <!-- Quick Dispatch -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Dispatch</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="personnel-dispatch">
+          <div class="skeleton" style="height:40px"></div>
+          <div class="skeleton" style="height:40px"></div>
+          <div class="skeleton" style="height:40px"></div>
+        </div>
+      </div>
+
+      <!-- System Health -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-server"></i> System Health</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <div>
+            <div class="flex-between" style="font-size:0.78rem;margin-bottom:4px">
+              <span style="color:var(--text-secondary)">API Gateway</span>
+              <span class="text-green text-mono" id="api-uptime">—s</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="uptime-bar" style="width:0%"></div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem">
+            <span style="color:var(--text-muted)">WebSocket</span>
+            <span class="text-green">● Connected</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem">
+            <span style="color:var(--text-muted)">Database</span>
+            <span class="text-green" id="db-status">● Operational</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick SOS Modal -->
+<div class="modal-overlay" id="sosModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--accent-red)"><i class="fa-solid fa-tower-broadcast"></i> Broadcast Emergency Alert</div>
+      <button class="modal-close" onclick="document.getElementById('sosModal').classList.remove('active')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Incident Type</label>
+      <select id="m-type">
+        <option>Fire</option><option>Medical</option><option>Security</option>
+        <option>Flood</option><option>Earthquake</option><option>Chemical</option>
+        <option>Evacuation</option><option>SOS</option><option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Severity</label>
+        <select id="m-severity">
+          <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Reported By</label>
+        <input id="m-reporter" type="text" placeholder="Your name / unit" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Location / Zone</label>
+      <input id="m-location" type="text" placeholder="e.g. Block B, Floor 3, Room 302" required />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="m-message" rows="3" placeholder="Describe the emergency situation in detail..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('sosModal').classList.remove('active')">Cancel</button>
+      <button class="btn btn-danger" style="flex:2" id="modal-submit-btn" onclick="submitQuickAlert()">
+        <i class="fa-solid fa-satellite-dish"></i> BROADCAST ALERT
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
+<script>
+const API = '/api/alerts';
+const PERSONNEL_API = '/api/personnel';
+
+const typeIcons = {
+  Fire:'fa-fire',Medical:'fa-kit-medical',Security:'fa-shield',
+  Flood:'fa-water',Earthquake:'fa-house-crack',Chemical:'fa-flask',
+  Evacuation:'fa-person-running',SOS:'fa-sos',Other:'fa-circle-exclamation'
+};
+const typeIconClass = {
+  Fire:'icon-fire',Medical:'icon-medical',Security:'icon-security',
+  Flood:'icon-flood',Earthquake:'icon-earthquake',SOS:'icon-sos',Other:'icon-other'
+};
+
+function timeAgo(d) {
+  const s = Math.floor((Date.now() - new Date(d)) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  return `${Math.floor(s/3600)}h ago`;
+}
+
+function severityClass(sev) {
+  return { Critical:'critical',High:'high',Medium:'medium',Low:'low' }[sev] || 'high';
+}
+
+function renderFeedItem(a) {
+  const ic = typeIcons[a.type] || 'fa-circle-exclamation';
+  const icc = typeIconClass[a.type] || 'icon-other';
+  const sc = severityClass(a.severity);
+  return `
+    <div class="feed-item ${sc}" onclick="window.location='alerts.html'">
+      <div class="feed-type-icon ${icc}"><i class="fa-solid ${ic}"></i></div>
+      <div class="feed-info">
+        <div class="feed-header">
+          <span class="feed-title">${a.type} Emergency</span>
+          <span class="feed-time">${timeAgo(a.createdAt)}</span>
+        </div>
+        <div class="feed-location"><i class="fa-solid fa-location-dot" style="font-size:0.7rem;margin-right:3px"></i>${a.location}</div>
+        <div class="feed-message">${a.message}</div>
+      </div>
+      <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+    </div>`;
+}
+
+async function loadDashboard() {
+  try {
+    const [statsRes, persRes] = await Promise.all([
+      fetch(`${API}/stats`),
+      fetch(`${PERSONNEL_API}?status=Available&limit=4`)
+    ]);
+    const stats = await statsRes.json();
+    const persData = await persRes.json();
+
+    if (stats.success) {
+      document.getElementById('stat-active').textContent = stats.stats.active;
+      document.getElementById('stat-responding').textContent = stats.stats.responding;
+      document.getElementById('stat-resolved').textContent = stats.stats.resolved;
+      document.getElementById('stat-response-time').textContent = stats.stats.avgResponseTime || '< 1';
+
+      // Feed
+      const feed = document.getElementById('alert-feed');
+      if (stats.recentAlerts.length === 0) {
+        feed.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-check"></i><p>No active incidents — all clear</p></div>';
+      } else {
+        feed.innerHTML = stats.recentAlerts.map(renderFeedItem).join('');
+      }
+
+      // Type breakdown
+      const tb = document.getElementById('type-breakdown');
+      const total = stats.stats.total || 1;
+      tb.innerHTML = (stats.typeBreakdown || []).slice(0,5).map(t => {
+        const pct = Math.round((t.count / total) * 100);
+        return `
+          <div>
+            <div class="flex-between" style="font-size:0.78rem;margin-bottom:3px">
+              <span>${t._id}</span><span class="text-mono" style="color:var(--accent-cyan)">${t.count}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          </div>`;
+      }).join('') || '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:12px">No data yet</div>';
+    }
+
+    // Personnel dispatch
+    const pd = document.getElementById('personnel-dispatch');
+    if (persData.success && persData.personnel.length > 0) {
+      pd.innerHTML = persData.personnel.slice(0,4).map(p => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,255,0.1);display:flex;align-items:center;justify-content:center;font-size:0.8rem">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">${p.role} — ${p.zone}</div>
+          </div>
+          <span class="badge badge-available">Free</span>
+        </div>`).join('');
+    } else {
+      pd.innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:8px">No available personnel</div>';
+    }
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function loadHealth() {
+  try {
+    const res = await fetch('/api/health');
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('api-uptime').textContent = d.uptime + 's';
+      const pct = Math.min((d.uptime / 3600) * 100, 100);
+      document.getElementById('uptime-bar').style.width = pct + '%';
+    }
+  } catch (e) {}
+}
+
+// Socket live updates
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  loadHealth();
+  setInterval(loadDashboard, 10000);
+  setInterval(loadHealth, 15000);
+
+  setTimeout(() => {
+    const s = window._crisisSocket;
+    if (s) {
+      s.on('alert:new', () => loadDashboard());
+      s.on('alert:updated', () => loadDashboard());
+      s.on('alert:resolved', () => loadDashboard());
+    }
+  }, 1500);
+});
+
+async function submitQuickAlert() {
+  const loc = document.getElementById('m-location').value.trim();
+  const msg = document.getElementById('m-message').value.trim();
+  if (!loc || !msg) { showToast('Missing Fields', 'Location and description are required', 'warning'); return; }
+
+  const btn = document.getElementById('modal-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Broadcasting...';
+
+  const payload = {
+    type: document.getElementById('m-type').value,
+    severity: document.getElementById('m-severity').value,
+    location: loc,
+    message: msg,
+    reportedBy: document.getElementById('m-reporter').value || 'Command Center',
+    reporterRole: 'Manager',
+    status: 'ACTIVE'
+  };
+
+  // Try geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { payload.lat = pos.coords.latitude; payload.lng = pos.coords.longitude; doSubmit(payload, btn); },
+      () => doSubmit(payload, btn),
+      { timeout: 3000 }
+    );
+  } else {
+    doSubmit(payload, btn);
+  }
+}
+
+async function doSubmit(payload, btn) {
+  try {
+    const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const d = await res.json();
+    if (d.success) {
+      showToast('Alert Broadcasted', `${payload.type} at ${payload.location}`, payload.severity === 'Critical' ? 'critical' : 'warning');
+      document.getElementById('sosModal').classList.remove('active');
+      document.getElementById('m-location').value = '';
+      document.getElementById('m-message').value = '';
+      loadDashboard();
+    } else {
+      showToast('Error', d.error, 'error');
+    }
+  } catch (e) {
+    showToast('Network Error', 'Could not reach server', 'error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> BROADCAST ALERT';
+}
+</script>
+</body>
+</html>

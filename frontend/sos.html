@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOS Broadcast | CrisisNexus</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="main-content">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-satellite-dish" style="color:var(--accent-red);margin-right:10px"></i>SOS Emergency Broadcast</h1>
+      <p class="subtitle">Instantly alert all response units and command center</p>
+    </div>
+    <span class="live-badge"><span class="live-dot"></span> BROADCAST READY</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+    <!-- Main Form -->
+    <div class="card">
+      <div class="card-title" style="color:var(--accent-red)"><i class="fa-solid fa-tower-broadcast"></i> Emergency Incident Report</div>
+
+      <form id="alertForm" autocomplete="off">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Incident Type</label>
+            <select id="type" required>
+              <option value="">— Select Type —</option>
+              <option>Fire</option>
+              <option>Medical</option>
+              <option>Security</option>
+              <option>Flood</option>
+              <option>Earthquake</option>
+              <option>Structural</option>
+              <option>Chemical</option>
+              <option>Evacuation</option>
+              <option>SOS</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Severity Level</label>
+            <select id="severity" required>
+              <option value="">— Select Severity —</option>
+              <option value="Critical">🔴 Critical — Life threatening</option>
+              <option value="High">🟠 High — Urgent response needed</option>
+              <option value="Medium">🟡 Medium — Controlled situation</option>
+              <option value="Low">🟢 Low — Precautionary</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location / Zone</label>
+            <input id="location" type="text" placeholder="e.g. Block A, Floor 2" required />
+          </div>
+          <div class="form-group">
+            <label>Floor / Room</label>
+            <input id="floor" type="text" placeholder="e.g. Floor 3, Room 302" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Incident Description</label>
+          <textarea id="message" rows="4" placeholder="Describe the emergency: what happened, how many affected, immediate danger..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Reported By</label>
+            <input id="reportedBy" type="text" placeholder="Your name or unit ID" />
+          </div>
+          <div class="form-group">
+            <label>Your Role</label>
+            <select id="reporterRole">
+              <option>Staff</option>
+              <option>Security</option>
+              <option>Manager</option>
+              <option>FirstResponder</option>
+              <option>Guest</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Estimated Casualties / Affected</label>
+          <input id="casualties" type="number" min="0" placeholder="0" style="max-width:200px" />
+        </div>
+
+        <!-- GPS Status -->
+        <div id="gps-status" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle);margin-bottom:18px;font-size:0.82rem;color:var(--text-muted)">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          <span id="gps-text">Acquiring GPS coordinates...</span>
+        </div>
+
+        <div class="sos-center" style="padding:24px 0">
+          <div class="sos-ring">
+            <button type="submit" class="btn btn-sos" id="sos-btn">
+              <i class="fa-solid fa-tower-broadcast"></i> BROADCAST SOS
+            </button>
+          </div>
+          <p style="color:var(--text-muted);font-size:0.8rem;max-width:320px">This will instantly alert all on-duty personnel and command center. All logs are permanent.</p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right Panel -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Severity Guide -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-circle-info"></i> Severity Guide</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+          <div style="padding:10px;border-radius:8px;border-left:3px solid var(--accent-red);background:rgba(255,23,68,0.05)">
+            <div style="font-weight:600;font-size:0.85rem;color:var(--accent-red)">🔴 Critical</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">Immediate life risk — fire, cardiac arrest, armed threat, structural collapse</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;border-left:3px solid var(--accent-orange);background:rgba(255,109,0,0.05)">
+            <div style="font-weight:600;font-size:0.85rem;color:var(--accent-orange)">🟠 High</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">Serious risk — major injury, rapidly spreading incident, multiple people affected</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;border-left:3px solid var(--accent-yellow);background:rgba(255,214,0,0.05)">
+            <div style="font-weight:600;font-size:0.85rem;color:var(--accent-yellow)">🟡 Medium</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">Manageable — minor injury, contained threat, requires response but not critical</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;border-left:3px solid var(--accent-green);background:rgba(0,230,118,0.05)">
+            <div style="font-weight:600;font-size:0.85rem;color:var(--accent-green)">🟢 Low</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">Precautionary — suspicious activity, minor hazard, no immediate danger</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Broadcasts -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Broadcasts</div>
+        <div id="recent-broadcasts" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div class="skeleton" style="height:50px"></div>
+          <div class="skeleton" style="height:50px"></div>
+          <div class="skeleton" style="height:50px"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Success Animation -->
+<div id="success-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="font-size:5rem;animation:dot-pulse 1s infinite">📡</div>
+  <div style="font-family:var(--font-heading);font-size:2rem;color:var(--accent-cyan);letter-spacing:2px">ALERT BROADCASTED</div>
+  <div id="success-detail" style="color:var(--text-secondary);font-size:0.95rem;text-align:center;max-width:400px"></div>
+  <div style="display:flex;gap:12px;margin-top:16px">
+    <a href="admin.html" class="btn btn-primary">Go to Dashboard</a>
+    <button class="btn btn-outline" onclick="closeSuccess()">Report Another</button>
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
+<script>
+const API = '/api/alerts';
+let currentLat = null, currentLng = null;
+
+// GPS
+function initGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById('gps-text').textContent = 'GPS not available — location not attached';
+    return;
+  }
+  navigator.geolocation.watchPosition(pos => {
+    currentLat = pos.coords.latitude;
+    currentLng = pos.coords.longitude;
+    document.getElementById('gps-status').style.borderColor = 'var(--accent-green)';
+    document.getElementById('gps-text').innerHTML = `<span style="color:var(--accent-green)">● GPS Locked</span> — ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+  }, () => {
+    document.getElementById('gps-text').textContent = 'GPS unavailable — submitting without coordinates';
+  }, { enableHighAccuracy: true });
+}
+
+async function loadRecentBroadcasts() {
+  try {
+    const res = await fetch(API + '?limit=3');
+    const d = await res.json();
+    const el = document.getElementById('recent-broadcasts');
+    if (!d.success || d.alerts.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:8px">No recent broadcasts</div>';
+      return;
+    }
+    el.innerHTML = d.alerts.map(a => `
+      <div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;font-size:0.83rem">${a.type}</span>
+          <span class="badge badge-${a.severity.toLowerCase()}">${a.severity}</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px">${a.location}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">${new Date(a.createdAt).toLocaleTimeString()}</div>
+      </div>`).join('');
+  } catch (e) {}
+}
+
+document.getElementById('alertForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('sos-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> BROADCASTING...';
+
+  const payload = {
+    type: document.getElementById('type').value,
+    severity: document.getElementById('severity').value,
+    location: document.getElementById('location').value,
+    floor: document.getElementById('floor').value,
+    message: document.getElementById('message').value,
+    reportedBy: document.getElementById('reportedBy').value || 'Anonymous',
+    reporterRole: document.getElementById('reporterRole').value,
+    casualties: parseInt(document.getElementById('casualties').value) || 0,
+    lat: currentLat,
+    lng: currentLng,
+    status: 'ACTIVE',
+    isSOSTriggered: true
+  };
+
+  try {
+    const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('success-detail').innerHTML = `<b>${d.alert.type}</b> incident at <b>${d.alert.location}</b><br>Severity: ${d.alert.severity} | ID: <code>${d.alert.incidentId}</code>`;
+      const ol = document.getElementById('success-overlay');
+      ol.style.display = 'flex';
+      loadRecentBroadcasts();
+    } else {
+      showToast('Broadcast Failed', d.error, 'error');
+    }
+  } catch (err) {
+    showToast('Network Error', 'Cannot reach server. Check connection.', 'error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-tower-broadcast"></i> BROADCAST SOS';
+});
+
+function closeSuccess() {
+  document.getElementById('success-overlay').style.display = 'none';
+  document.getElementById('alertForm').reset();
+}
+
+document.addEventListener('DOMContentLoaded', () => { initGPS(); loadRecentBroadcasts(); });
+</script>
+</body>
+</html>

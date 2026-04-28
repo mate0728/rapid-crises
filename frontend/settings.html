@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Config | CrisisNexus</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="main-content">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-sliders" style="color:var(--accent-cyan);margin-right:10px"></i>System Configuration</h1>
+      <p class="subtitle">Manage admin profile, notification preferences, and system settings</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+
+    <!-- Admin Profile -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-user-shield"></i> Admin Profile</div>
+      <div class="form-group"><label>Full Name</label><input id="admin-name" type="text" value="System Administrator" /></div>
+      <div class="form-group"><label>Email Address</label><input id="admin-email" type="email" value="admin@crisisnexus.local" /></div>
+      <div class="form-group"><label>Organization / Venue</label><input id="admin-org" type="text" placeholder="e.g. Grand Hyatt Mumbai" /></div>
+      <div class="form-group"><label>Emergency Contact</label><input id="admin-contact" type="text" placeholder="+91-XXXXXXXXXX" /></div>
+      <button class="btn btn-primary" onclick="showToast('Saved','Profile updated','success')"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-bell"></i> Notification Preferences</div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:var(--accent-cyan);width:16px;height:16px" />
+          <div><div style="font-size:0.87rem;font-weight:500">Sound alerts for Critical incidents</div><div style="font-size:0.75rem;color:var(--text-muted)">Audio alarm when Critical severity alert is broadcast</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:var(--accent-cyan);width:16px;height:16px" />
+          <div><div style="font-size:0.87rem;font-weight:500">Browser push notifications</div><div style="font-size:0.75rem;color:var(--text-muted)">Toast popups for all new alerts</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:var(--accent-cyan);width:16px;height:16px" />
+          <div><div style="font-size:0.87rem;font-weight:500">Auto-refresh dashboard</div><div style="font-size:0.75rem;color:var(--text-muted)">Refresh stats every 10 seconds</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--accent-cyan);width:16px;height:16px" />
+          <div><div style="font-size:0.87rem;font-weight:500">Email alerts for High+ severity</div><div style="font-size:0.75rem;color:var(--text-muted)">Configure SMTP in environment variables</div></div>
+        </label>
+      </div>
+      <button class="btn btn-primary" style="margin-top:18px" onclick="showToast('Saved','Preferences updated','success')"><i class="fa-solid fa-floppy-disk"></i> Save Preferences</button>
+    </div>
+
+    <!-- System Info -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-server"></i> System Status</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+        <div class="flex-between" style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <span style="font-size:0.85rem">Backend API</span>
+          <span class="badge badge-available" id="sys-api">Checking...</span>
+        </div>
+        <div class="flex-between" style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <span style="font-size:0.85rem">WebSocket Server</span>
+          <span class="badge badge-available" id="sys-ws">Connected</span>
+        </div>
+        <div class="flex-between" style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <span style="font-size:0.85rem">Database</span>
+          <span class="badge" id="sys-db" style="background:rgba(0,230,118,0.12);color:var(--accent-green);border:1px solid rgba(0,230,118,0.25)">Operational</span>
+        </div>
+        <div class="flex-between" style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <span style="font-size:0.85rem">System Uptime</span>
+          <span style="font-family:var(--font-mono);font-size:0.83rem;color:var(--accent-cyan)" id="sys-uptime">—</span>
+        </div>
+        <div class="flex-between" style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border-subtle)">
+          <span style="font-size:0.85rem">Connected Clients</span>
+          <span style="font-family:var(--font-mono);font-size:0.83rem;color:var(--accent-cyan)" id="sys-clients">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" style="border-color:rgba(255,23,68,0.2)">
+      <div class="card-title" style="color:var(--accent-red)"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+        <div style="padding:14px;background:rgba(255,23,68,0.05);border-radius:8px;border:1px solid rgba(255,23,68,0.15)">
+          <div style="font-size:0.87rem;font-weight:600;margin-bottom:4px">Resolve All Active Alerts</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px">Mark every active incident as Resolved. Use only after an all-clear has been confirmed.</div>
+          <button class="btn btn-danger btn-sm" onclick="resolveAll()"><i class="fa-solid fa-check-double"></i> Resolve All</button>
+        </div>
+        <div style="padding:14px;background:rgba(255,23,68,0.05);border-radius:8px;border:1px solid rgba(255,23,68,0.15)">
+          <div style="font-size:0.87rem;font-weight:600;margin-bottom:4px">System About</div>
+          <div style="font-size:0.78rem;color:var(--text-muted)">CrisisNexus v2.0 — Rapid Crisis Response Platform<br>Built for National-Level Emergency Coordination<br>© 2025 CrisisNexus Team</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
+<script>
+async function loadHealth() {
+  try {
+    const res = await fetch('/api/health');
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('sys-api').textContent = 'Online';
+      document.getElementById('sys-uptime').textContent = d.uptime + 's';
+      document.getElementById('sys-clients').textContent = d.connectedClients;
+    }
+  } catch (e) {
+    document.getElementById('sys-api').textContent = 'Offline';
+    document.getElementById('sys-api').className = 'badge badge-busy';
+  }
+}
+
+async function resolveAll() {
+  if (!confirm('Resolve ALL active alerts? This cannot be undone.')) return;
+  try {
+    const res = await fetch('/api/alerts?status=ACTIVE&limit=100');
+    const d = await res.json();
+    if (!d.success) return;
+    let count = 0;
+    for (const a of d.alerts) {
+      await fetch(`/api/alerts/${a._id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'RESOLVED', updatedBy: 'Admin', note: 'Bulk resolved via settings' }) });
+      count++;
+    }
+    showToast('Done', `${count} alerts resolved`, 'success');
+  } catch (e) { showToast('Error', 'Failed to resolve alerts', 'error'); }
+}
+
+setTimeout(() => {
+  if (window._crisisSocket) {
+    window._crisisSocket.on('system:clients', n => {
+      document.getElementById('sys-clients').textContent = n;
+    });
+  }
+}, 1500);
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadHealth();
+  setInterval(loadHealth, 10000);
+});
+</script>
+</body>
+</html>

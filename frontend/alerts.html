@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alert Logs | CrisisNexus</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="main-content">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-orange);margin-right:10px"></i>Alert Logs</h1>
+      <p class="subtitle">Full incident history with real-time status updates</p>
+    </div>
+    <div class="header-actions">
+      <span class="live-badge"><span class="live-dot"></span> AUTO-REFRESH</span>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export</button>
+      <button class="btn btn-primary btn-sm" onclick="loadAlerts()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4" style="margin-bottom:18px">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
+        <i class="fa-solid fa-magnifying-glass" style="color:var(--text-muted)"></i>
+        <input id="search-input" type="text" placeholder="Search location, message, ID..." style="background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-body);width:100%;font-size:0.875rem" oninput="applyFilters()" />
+      </div>
+      <select id="f-type" style="width:auto;background:rgba(0,0,0,0.3);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 12px;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option>Fire</option><option>Medical</option><option>Security</option><option>Flood</option><option>Earthquake</option><option>Chemical</option><option>Evacuation</option><option>SOS</option><option>Other</option>
+      </select>
+      <select id="f-severity" style="width:auto;background:rgba(0,0,0,0.3);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 12px;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem" onchange="applyFilters()">
+        <option value="">All Severities</option>
+        <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+      </select>
+      <select id="f-status" style="width:auto;background:rgba(0,0,0,0.3);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 12px;color:var(--text-primary);font-family:var(--font-body);font-size:0.82rem" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option>ACTIVE</option><option>RESPONDING</option><option>CONTAINED</option><option>RESOLVED</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Summary Bar -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px" id="summary-bar">
+    <span style="font-size:0.82rem;color:var(--text-muted)" id="summary-text">Loading...</span>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Incident ID</th>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Severity</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Reported By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="alerts-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading incidents...
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail / Status Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="width:min(680px,95vw)">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-incident-title">Incident Details</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px" id="modal-meta-grid"></div>
+    <div style="margin-bottom:18px">
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Description</div>
+      <div id="modal-message" style="font-size:0.87rem;line-height:1.6;color:var(--text-primary)"></div>
+    </div>
+
+    <div style="margin-bottom:18px">
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Timeline</div>
+      <div class="timeline" id="modal-timeline"></div>
+    </div>
+
+    <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border-subtle);border-radius:10px;padding:16px">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:12px;color:var(--text-secondary)">Update Status</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:rgba(41,121,255,0.2);color:var(--accent-blue);border:1px solid rgba(41,121,255,0.3)" onclick="updateStatus('RESPONDING')"><i class="fa-solid fa-truck-fast"></i> Mark Responding</button>
+        <button class="btn btn-sm" style="background:rgba(255,214,0,0.15);color:var(--accent-yellow);border:1px solid rgba(255,214,0,0.3)" onclick="updateStatus('CONTAINED')"><i class="fa-solid fa-shield-check"></i> Mark Contained</button>
+        <button class="btn btn-sm btn-success" onclick="updateStatus('RESOLVED')"><i class="fa-solid fa-check"></i> Resolve</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="deleteAlert()"><i class="fa-solid fa-trash"></i> Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
+<script>
+const API = '/api/alerts';
+let allAlerts = [], currentAlertId = null;
+
+function fmt(d) {
+  return new Date(d).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
+}
+
+async function loadAlerts() {
+  try {
+    const res = await fetch(API + '?limit=200');
+    const d = await res.json();
+    if (d.success) { allAlerts = d.alerts; applyFilters(); }
+  } catch (e) {
+    document.getElementById('alerts-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--accent-red)"><i class="fa-solid fa-wifi-slash"></i> Cannot connect to server</td></tr>`;
+  }
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const type = document.getElementById('f-type').value;
+  const sev = document.getElementById('f-severity').value;
+  const status = document.getElementById('f-status').value;
+
+  const filtered = allAlerts.filter(a =>
+    (!type || a.type === type) &&
+    (!sev || a.severity === sev) &&
+    (!status || a.status === status) &&
+    (!search || [a.location, a.message, a.incidentId, a.reportedBy].join(' ').toLowerCase().includes(search))
+  );
+
+  document.getElementById('summary-text').innerHTML =
+    `Showing <strong>${filtered.length}</strong> of <strong>${allAlerts.length}</strong> incidents &nbsp;|&nbsp;
+     <span style="color:var(--accent-red)">${allAlerts.filter(a=>a.status==='ACTIVE').length} active</span> &nbsp;
+     <span style="color:var(--accent-blue)">${allAlerts.filter(a=>a.status==='RESPONDING').length} responding</span> &nbsp;
+     <span style="color:var(--accent-green)">${allAlerts.filter(a=>a.status==='RESOLVED').length} resolved</span>`;
+
+  const tbody = document.getElementById('alerts-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-filter-circle-xmark"></i><p>No incidents match your filters</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(a => `
+    <tr class="${a.severity === 'Critical' ? 'critical-row' : ''}" style="cursor:pointer" onclick="openDetail('${a._id}')">
+      <td><span class="text-mono" style="font-size:0.78rem;color:var(--accent-cyan)">${a.incidentId || '—'}</span></td>
+      <td style="font-size:0.78rem;color:var(--text-secondary);white-space:nowrap">${fmt(a.createdAt)}</td>
+      <td><strong>${a.type}</strong></td>
+      <td><span class="badge badge-${a.severity.toLowerCase()}">${a.severity}</span></td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.location}</td>
+      <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
+      <td style="font-size:0.8rem;color:var(--text-secondary)">${a.reportedBy || '—'}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="openDetail('${a._id}')"><i class="fa-solid fa-eye"></i></button>
+          ${a.status !== 'RESOLVED' ? `<button class="btn btn-success btn-sm" onclick="quickResolve('${a._id}')"><i class="fa-solid fa-check"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-severity').value = '';
+  document.getElementById('f-status').value = '';
+  applyFilters();
+}
+
+function openDetail(id) {
+  const a = allAlerts.find(x => x._id === id);
+  if (!a) return;
+  currentAlertId = id;
+
+  document.getElementById('modal-incident-title').innerHTML =
+    `<span style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:0.85rem">${a.incidentId}</span> — ${a.type} Incident`;
+
+  document.getElementById('modal-meta-grid').innerHTML = `
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Severity</div><span class="badge badge-${a.severity.toLowerCase()}">${a.severity}</span></div>
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Status</div><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></div>
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Location</div><div style="font-size:0.87rem">${a.location}</div></div>
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Reported By</div><div style="font-size:0.87rem">${a.reportedBy || 'Anonymous'} (${a.reporterRole || 'Staff'})</div></div>
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Created</div><div style="font-size:0.83rem;font-family:var(--font-mono)">${fmt(a.createdAt)}</div></div>
+    <div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Casualties</div><div style="font-size:0.87rem">${a.casualties || 0}</div></div>`;
+
+  document.getElementById('modal-message').textContent = a.message;
+
+  const timeline = a.timeline || [];
+  document.getElementById('modal-timeline').innerHTML = timeline.length === 0
+    ? '<div style="color:var(--text-muted);font-size:0.82rem">No timeline entries</div>'
+    : timeline.map(t => `
+        <div class="timeline-item">
+          <div class="timeline-dot"><i class="fa-solid fa-circle-dot"></i></div>
+          <div class="timeline-content">
+            <div class="timeline-action">${t.action} — <span style="color:var(--text-secondary)">${t.note || ''}</span></div>
+            <div class="timeline-meta">By ${t.by || 'System'} &bull; ${fmt(t.timestamp)}</div>
+          </div>
+        </div>`).join('');
+
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('active');
+  currentAlertId = null;
+}
+
+async function updateStatus(status) {
+  if (!currentAlertId) return;
+  try {
+    const res = await fetch(`${API}/${currentAlertId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, updatedBy: 'Operator', note: `Marked as ${status}` })
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast('Status Updated', `Incident marked as ${status}`, status === 'RESOLVED' ? 'success' : 'info');
+      closeModal();
+      loadAlerts();
+    }
+  } catch (e) { showToast('Error', 'Update failed', 'error'); }
+}
+
+async function quickResolve(id) {
+  try {
+    await fetch(`${API}/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'RESOLVED', updatedBy: 'Operator', note: 'Quick resolved from logs' }) });
+    showToast('Resolved', 'Incident closed', 'success');
+    loadAlerts();
+  } catch (e) { showToast('Error', 'Update failed', 'error'); }
+}
+
+async function deleteAlert() {
+  if (!currentAlertId || !confirm('Delete this incident permanently?')) return;
+  try {
+    await fetch(`${API}/${currentAlertId}`, { method: 'DELETE' });
+    showToast('Deleted', 'Incident removed', 'info');
+    closeModal();
+    loadAlerts();
+  } catch (e) { showToast('Error', 'Delete failed', 'error'); }
+}
+
+function exportCSV() {
+  const headers = ['Incident ID','Time','Type','Severity','Location','Status','Reported By','Message'];
+  const rows = allAlerts.map(a => [a.incidentId,new Date(a.createdAt).toISOString(),a.type,a.severity,`"${a.location}"`,a.status,a.reportedBy||'',`"${(a.message||'').replace(/"/g,'""')}"`]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `crisis-logs-${Date.now()}.csv`; a.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAlerts();
+  setInterval(loadAlerts, 12000);
+  setTimeout(() => {
+    if (window._crisisSocket) {
+      window._crisisSocket.on('alert:new', loadAlerts);
+      window._crisisSocket.on('alert:updated', loadAlerts);
+    }
+  }, 1500);
+});
+</script>
+</body>
+</html>
